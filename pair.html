@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp Pair Code</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #141414;
+    font-family: 'Arial', sans-serif;
+    color: #fff;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .box {
+    width: 320px;
+    padding: 20px;
+    text-align: center;
+    background-color: rgba(72, 133, 237, 0.85);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7);
+  }
+
+  .input-container {
+    display: flex;
+    margin-top: 10px;
+  }
+
+  .input-container input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 0.5rem 0 0 0.5rem;
+    font-size: 16px;
+  }
+
+  .input-container button {
+    padding: 10px;
+    border: none;
+    background: #25d366;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 0 0.5rem 0.5rem 0;
+    transition: 0.2s;
+  }
+
+  .input-container button:hover {
+    background: #128c7e;
+  }
+
+  #pair-code {
+    margin-top: 20px;
+    word-wrap: break-word;
+    font-size: 16px;
+    color: #fff;
+    background: rgba(0,0,0,0.3);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  #pair-code.copied {
+    color: #25d366;
+    font-weight: bold;
+  }
+
+  #loading-spinner {
+    display: none;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="box">
+    <h3>Link with phone number</h3>
+    <p>🔢 Enter your number with country code</p>
+    <div class="input-container">
+      <input type="text" id="number" placeholder="+263781330745">
+      <button id="submit">Submit</button>
+    </div>
+    <div id="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+    <div id="pair-code">Your pair code will appear here</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+const submitBtn = document.getElementById('submit');
+const numberInput = document.getElementById('number');
+const pairCodeDiv = document.getElementById('pair-code');
+const spinner = document.getElementById('loading-spinner');
+
+async function copyCode() {
+  if (!pairCodeDiv.innerText) return;
+  await navigator.clipboard.writeText(pairCodeDiv.innerText);
+  pairCodeDiv.classList.add('copied');
+  pairCodeDiv.innerText = "✔️ COPIED";
+  setTimeout(() => {
+    pairCodeDiv.classList.remove('copied');
+    pairCodeDiv.innerText = "Your pair code will appear here";
+  }, 2000);
+}
+
+pairCodeDiv.addEventListener('click', copyCode);
+
+submitBtn.addEventListener('click', async () => {
+  const number = numberInput.value.replace(/[^0-9]/g,'');
+  if (!number || number.length < 10) {
+    pairCodeDiv.innerText = "❗ Invalid number";
+    return;
+  }
+
+  spinner.style.display = 'block';
+  pairCodeDiv.innerText = "";
+
+  try {
+    const response = await axios.get(`/code?number=${number}`);
+    const code = response.data.code || "❌ Service Unavailable";
+    pairCodeDiv.innerText = code;
+  } catch (err) {
+    pairCodeDiv.innerText = "❌ Error connecting to server";
+    console.error(err);
+  }
+
+  spinner.style.display = 'none';
+});
+</script>
+</body>
+</html>
